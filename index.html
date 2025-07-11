@@ -311,7 +311,8 @@
                 }
 
                 // Monta a URL para chamar o backend (que você vai rodar localmente)
-                const backendUrl = `http://localhost:8000/download?url=${encodeURIComponent(url)}&format=${selectedFormat}`;
+                const backendUrl = `https://yamatreze.onrender.com/download?url=${encodeURIComponent(url)}&format=${selectedFormat}`;
+
                 
                 // Abre nova aba para iniciar o download do arquivo convertido
                 window.open(backendUrl, '_blank');
