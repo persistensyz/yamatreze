@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YTConvert - YouTube to MP3/MP4 Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #ff0000;
+            --primary-dark: #cc0000;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+        }
+        
+        .dark {
+            background-color: #1a1a1a;
+            color: #f0f0f0;
+        }
+        
+        .dark .converter-box {
+            background-color: #2d2d2d;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .dark input {
+            background-color: #3d3d3d;
+            color: #f0f0f0;
+        }
+        
+        .dark .format-option {
+            background-color: #3d3d3d;
+        }
+        
+        .dark .format-option.selected {
+            background-color: var(--primary-dark);
+        }
+        
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+        
+        /* Animation for the converter box */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        
+        .animate-pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        /* Tooltip styles */
+        .tooltip {
+            position: relative;
+        }
+        
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .tooltip .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #555 transparent transparent transparent;
+        }
+        
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8">
+            <div class="flex items-center">
+                <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/d75deb7b-ec04-4990-9a16-c7c78d45e437.png" alt="YTConvert logo - a red play button with a down arrow inside" width="40" height="40" class="mr-3">
+                <h1 class="text-2xl font-bold text-gray-800 dark:text-white">YTConvert</h1>
+            </div>
+            <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+            </button>
+        </header>
+
+        <!-- Main Converter -->
+        <main>
+            <div class="converter-box bg-white rounded-xl shadow-lg p-6 max-w-3xl mx-auto mb-8 transition-all duration-300 animate-pulse">
+                <h2 class="text-2xl font-semibold text-gray-800 dark:text-white mb-6 text-center">Convert YouTube Videos to MP3 or MP4</h2>
+                
+                <!-- URL Input -->
+                <div class="mb-6">
+                    <label for="youtube-url" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">YouTube Video URL</label>
+                    <div class="flex">
+                        <input type="text" id="youtube-url" class="flex-grow px-4 py-3 rounded-l-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-gray-700" placeholder="https://www.youtube.com/watch?v=..." />
+                        <button id="convert-btn" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-r-lg transition duration-300">Convert</button>
+                    </div>
+                </div>
+                
+                <!-- Format Selection -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Format</label>
+                    <div class="flex space-x-4">
+                        <div class="format-option border border-gray-300 rounded-lg p-4 flex-1 text-center cursor-pointer transition duration-300" data-format="mp3">
+                            <div class="mb-2">
+                                <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/160ced9a-4444-430b-addd-d8e11a548f77.png" alt="MP3 audio format icon - a music note inside a red circle" width="50" height="50" class="mx-auto">
+                            </div>
+                            <h3 class="font-medium text-gray-800 dark:text-white">MP3 Audio</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">High quality audio file</p>
+                        </div>
+                        <div class="format-option border border-gray-300 rounded-lg p-4 flex-1 text-center cursor-pointer transition duration-300 selected" data-format="mp4">
+                            <div class="mb-2">
+                                <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/cd9dd00d-d31c-422d-98dc-df4beefb6c05.png" alt="MP4 video format icon - a film strip inside a red square" width="50" height="50" class="mx-auto">
+                            </div>
+                            <h3 class="font-medium text-gray-800 dark:text-white">MP4 Video</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Video with sound</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quality Selection -->
+                <div class="mb-6 hidden" id="quality-section">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Quality</label>
+                    <select id="quality-select" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-gray-700">
+                        <option value="high">High Quality (HD)</option>
+                        <option value="medium" selected>Medium Quality</option>
+                        <option value="low">Low Quality (Smaller file)</option>
+                    </select>
+                </div>
+                
+                <!-- Progress Section (initially hidden) -->
+                <div id="progress-section" class="hidden">
+                    <div class="mb-4">
+                        <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
+                            <span>Converting...</span>
+                            <span id="progress-percentage">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                            <div id="progress-bar" class="bg-red-600 h-2 rounded-full progress-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Results Section (initially hidden) -->
+                <div id="results-section" class="hidden">
+                    <div class="border border-gray-300 rounded-lg p-4 mb-4">
+                        <div class="flex items-center mb-4">
+                            <img id="thumbnail" src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/4234ca41-60d0-4ddc-a25c-12e80a6a05c8.png" alt="Placeholder for YouTube video thumbnail - black rectangle with white YouTube logo" width="120" height="90" class="rounded-lg mr-4">
+                            <div>
+                                <h3 id="video-title" class="font-medium text-gray-800 dark:text-white">Video Title Here</h3>
+                                <p id="video-duration" class="text-sm text-gray-600 dark:text-gray-400">Duration: 00:00</p>
+                            </div>
+                        </div>
+                        <div class="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 mb-4">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <span id="file-format" class="font-medium text-gray-800 dark:text-white">MP4 Video</span>
+                                    <span id="file-size" class="text-sm text-gray-600 dark:text-gray-400 ml-2">(~12 MB)</span>
+                                </div>
+                                <button id="download-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition duration-300">Download</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <button id="new-conversion-btn" class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-medium">Convert Another Video</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Features Section -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 max-w-3xl mx-auto mb-8">
+                <h2 class="text-2xl font-semibold text-gray-800 dark:text-white mb-6">Why Choose YTConvert?</h2>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="text-center p-4">
+                        <div class="mb-4">
+                            <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/7e21b23f-774a-474f-bd35-23f117b7d025.png" alt="Fast conversion speed icon - lightning bolt inside a red circle" width="80" height="80" class="mx-auto">
+                        </div>
+                        <h3 class="font-medium text-gray-800 dark:text-white mb-2">Fast Conversion</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Convert videos in seconds with our optimized servers</p>
+                    </div>
+                    <div class="text-center p-4">
+                        <div class="mb-4">
+                            <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/ee88a186-926b-4c38-82e9-2ccfedb09320.png" alt="High quality output icon - red HD badge with stars" width="80" height="80" class="mx-auto">
+                        </div>
+                        <h3 class="font-medium text-gray-800 dark:text-white mb-2">High Quality</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Preserve the original quality of your videos and music</p>
+                    </div>
+                    <div class="text-center p-4">
+                        <div class="mb-4">
+                            <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/a28133b6-514e-4612-9899-be3071a3569f.png" alt="No registration required icon - red checkmark on document" width="80" height="80" class="mx-auto">
+                        </div>
+                        <h3 class="font-medium text-gray-800 dark:text-white mb-2">No Registration</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Use our service immediately without creating an account</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- How It Works -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 max-w-3xl mx-auto mb-8">
+                <h2 class="text-2xl font-semibold text-gray-800 dark:text-white mb-6">How It Works</h2>
+                <ol class="space-y-6">
+                    <li class="flex items-start">
+                        <div class="bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-200 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 mr-4 mt-0.5">1</div>
+                        <div>
+                            <h3 class="font-medium text-gray-800 dark:text-white mb-1">Paste YouTube URL</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Copy and paste the link of the YouTube video you want to convert</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start">
+                        <div class="bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-200 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 mr-4 mt-0.5">2</div>
+                        <div>
+                            <h3 class="font-medium text-gray-800 dark:text-white mb-1">Select Format</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Choose between MP3 (audio) or MP4 (video) format</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start">
+                        <div class="bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-200 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 mr-4 mt-0.5">3</div>
+                        <div>
+                            <h3 class="font-medium text-gray-800 dark:text-white mb-1">Convert & Download</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Click convert and download your file when ready</p>
+                        </div>
+                    </li>
+                </ol>
+            </div>
+        </main>
+        
+        <!-- Footer -->
+        <footer class="text-center text-gray-600 dark:text-gray-400 text-sm mt-12">
+            <p class="mb-2">YTConvert - Fast YouTube to MP3/MP4 Converter</p>
+            <p class="text-xs">Disclaimer: This tool is intended for personal use only. Please respect copyright laws and YouTube's Terms of Service.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Dark/Light mode toggle
+            const themeToggle = document.getElementById('theme-toggle');
+            const sunIcon = document.getElementById('sun-icon');
+            const moonIcon = document.getElementById('moon-icon');
+            
+            // Check for saved theme preference or use preferred color scheme
+            const savedTheme = localStorage.getItem('theme') || 
+                              (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.body.classList.toggle('dark', savedTheme === 'dark');
+            sunIcon.classList.toggle('hidden', savedTheme === 'dark');
+            moonIcon.classList.toggle('hidden', savedTheme === 'light');
+            
+            themeToggle.addEventListener('click', () => {
+                document.body.classList.toggle('dark');
+                const isDark = document.body.classList.contains('dark');
+                sunIcon.classList.toggle('hidden', isDark);
+                moonIcon.classList.toggle('hidden', !isDark);
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            });
+            
+            // Format selection
+            const formatOptions = document.querySelectorAll('.format-option');
+            formatOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    formatOptions.forEach(opt => opt.classList.remove('selected'));
+                    option.classList.add('selected');
+                    document.getElementById('quality-section').classList.toggle('hidden', option.dataset.format === 'mp3');
+                });
+            });
+            
+            // Converter logic
+            const convertBtn = document.getElementById('convert-btn');
+            const youtubeUrl = document.getElementById('youtube-url');
+            const progressSection = document.getElementById('progress-section');
+            const resultsSection = document.getElementById('results-section');
+            const converterBox = document.querySelector('.converter-box');
+            
+            convertBtn.addEventListener('click', () => {
+                const url = youtubeUrl.value.trim();
+                const selectedFormat = document.querySelector('.format-option.selected').dataset.format;
+                
+                // Validação simples da URL
+                if (!url || (!url.includes('youtube.com') && !url.includes('youtu.be'))) {
+                    alert('Please enter a valid YouTube URL');
+                    return;
+                }
+
+                // Monta a URL para chamar o backend (que você vai rodar localmente)
+                const backendUrl = `http://localhost:8000/download?url=${encodeURIComponent(url)}&format=${selectedFormat}`;
+                
+                // Abre nova aba para iniciar o download do arquivo convertido
+                window.open(backendUrl, '_blank');
+            });
+
+
+            
+            function showResults() {
+                const selectedFormat = document.querySelector('.format-option.selected').dataset.format;
+                
+                // Update results UI
+                document.getElementById('file-format').textContent = 
+                    selectedFormat === 'mp3' ? 'MP3 Audio' : 'MP4 Video';
+                
+                // Random file size between 2MB and 50MB for demo
+                const fileSize = selectedFormat === 'mp3' ? 
+                    (2 + Math.random() * 8).toFixed(1) + ' MB' : 
+                    (5 + Math.random() * 45).toFixed(1) + ' MB';
+                
+                document.getElementById('file-size').textContent = '(~' + fileSize + ')';
+                
+                // Show results section
+                progressSection.classList.add('hidden');
+                resultsSection.classList.remove('hidden');
+            }
+            
+            // New conversion button
+            document.getElementById('new-conversion-btn').addEventListener('click', () => {
+                youtubeUrl.value = '';
+                document.querySelector('.converter-box > div:not(#progress-section):not(#results-section)').classList.remove('hidden');
+                resultsSection.classList.add('hidden');
+                converterBox.classList.add('animate-pulse');
+            });
+            
+            // Download button
+            document.getElementById('download-btn').addEventListener('click', () => {
+                // In a real app, this would trigger the file download
+                alert('In a real implementation, this would download your converted file.');
+            });
+            
+            // Tooltip for disclaimer
+            const disclaimerTooltip = document.createElement('div');
+            disclaimerTooltip.className = 'tooltip absolute invisible opacity-0 z-50';
+            disclaimerTooltip.innerHTML = `
+                <div class="bg-gray-800 text-white text-xs rounded p-2 w-48">
+                    Please ensure you have permission to download and convert this content.
+                </div>
+            `;
+            convertBtn.appendChild(disclaimerTooltip);
+            
+            convertBtn.addEventListener('mouseenter', () => {
+                disclaimerTooltip.classList.remove('invisible', 'opacity-0');
+                disclaimerTooltip.classList.add('visible', 'opacity-100');
+            });
+            
+            convertBtn.addEventListener('mouseleave', () => {
+                disclaimerTooltip.classList.remove('visible', 'opacity-100');
+                disclaimerTooltip.classList.add('invisible', 'opacity-0');
+            });
+        });
+    </script>
+</body>
+</html>
+
